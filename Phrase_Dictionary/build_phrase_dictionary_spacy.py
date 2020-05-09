@@ -5,8 +5,8 @@ import spacy
 import textacy
 from dotenv import load_dotenv
 from translate.storage.tmx import tmxfile
-
-from common import call_translation
+from ..common.common import call_translation, set_log_level, load_tmx_file, load_spacy_model, load_phrase_dictionary
+import logging
 
 load_dotenv()
 
@@ -21,7 +21,7 @@ class Config:
 
 def main():
     # We pass these dynamic arguments in for parallel jobs
-    parser = argparse.ArgumentParser(description='Process docs for machine translation')
+    parser = argparse.ArgumentParser(description='Build a phrase dictionary using spaCy and TextaCy')
     parser.add_argument('--source-tmx', type=str, default='',
                         help='The input tmx file to process')
     parser.add_argument('--dictionary-path', type=str, default='',
@@ -40,18 +40,21 @@ def main():
                         help='end at this number')
 
     args = parser.parse_args()
+    set_log_level(Config.DEBUG)
 
-    nlp_model_id = spacy.load(args.nlp_id)
-    nlp_model_target = spacy.load(args.nlp_target)
+    nlp_model_id = load_spacy_model(args.nlp_id)
+    nlp_model_target = load_spacy_model(args.nlp_target)
+    logging.debug(f"Loaded models {args.nlp_id} {args.nlp_target}")
 
     phrases = {}
 
-    with open(args.source_tmx, 'rb') as tmx:
-        tmx_file = tmxfile(tmx, 'en-GB', 'fr-FR')  # TODO This does not affect what is loaded it seems
+    tmx_file = load_tmx_file(args.source_tmx)
+    logging.debug(f"Loaded {args.source_tmx}")
 
     if os.path.isfile(os.path.join(args.dictionary_path, args.target_language + '_phrase_dictionary.txt')):
         phrase_file_name = str(os.path.join(args.dictionary_path, args.target_language + '_phrase_dictionary.txt'))
-        phrase_file = open(phrase_file_name, 'a')
+        phrase_file = load_phrase_dictionary(phrase_file_name, 'a')
+        logging.debug(f"Found existing phrase dictionary {phrase_file_name}")
         phrase_list = [line.rstrip('\n') for line in open(phrase_file_name)]
         for line in phrase_list:
             lst_line = line.split(',')
@@ -59,7 +62,8 @@ def main():
                 phrases[lst_line[0]] = lst_line[1]
 
     else:
-        phrase_file = open(os.path.join(args.dictionary_path, args.target_language + '_phrase_dictionary.txt'), 'a')
+        phrase_file = load_phrase_dictionary(os.path.join(args.dictionary_path, args.target_language +
+                                                          '_phrase_dictionary.txt'), 'a')
 
     for i, unit in enumerate(tmx_file.units):
 
@@ -69,18 +73,18 @@ def main():
         if i > args.batch_end:
             break
 
-        print(f"Processing record {i} of {len(tmx_file.units)} Batch start {args.batch_start} Batch end "
-              f"{args.batch_end}")
+        logging.info(f"Processing record {i} of {len(tmx_file.units)} (Batch start {args.batch_start} Batch end "
+                     f"{args.batch_end})")
 
         nlp_id = nlp_model_id(unit.getid())
         nlp_target = nlp_model_target(unit.gettarget())
-        res_id = textacy.ke.textrank(nlp_id, normalize='lemma', include_pos=('NOUN', 'PROPN', 'ADJ'), window_size=10,
-                                     edge_weighting='binary', position_bias=True, topn=10)
-        res_target = textacy.ke.textrank(nlp_target, normalize='lemma', include_pos=('NOUN', 'PROPN', 'ADJ'),
+        res_id = textacy.ke.textrank(nlp_id, normalize='lemma', include_pos=None, window_size=10,
+                                     edge_weighting='binary', position_bias=False, topn=10)
+        res_target = textacy.ke.textrank(nlp_target, normalize='lemma', include_pos=None,
                                          window_size=10, edge_weighting='binary', position_bias=False, topn=10)
 
         for r_id in res_id:
-            if len(r_id[0].split()) > 1:
+            if len(r_id[0].split()) > 1:  # We don't want single words, we want phrases
                 if not r_id[0] in phrases:
                     translation_results = call_translation([{'Text': r_id[0]}], args.target_language,
                                                            args.category_id, Config.SUBSCRIPTION_KEY, Config.REGION)
@@ -91,14 +95,14 @@ def main():
                                 # Let's only take exact matches
                                 if r_tar[0].lower().strip() == translation_results[0]['translations'][0][
                                     'text'].lower().strip():
-                                    bleu_score = 1
+                                    bleu_score = 1  # We use absolute matches but keep this here for BLEU if needed
                                     print(f"Found {r_id[0]} : {r_tar[0].strip()}")
                                     phrases[r_id[0]] = r_tar[0].strip()
+                                    # As the phrase dictionary is case sensitive, let's include a few variations
                                     phrase_file.write('\n' + r_id[0] + ', ' + r_tar[0].strip())
                                     phrase_file.write('\n' + r_id[0].lower() + ', ' + r_tar[0].strip().lower())
                                     phrase_file.write('\n' + r_id[0].upper() + ', ' + r_tar[0].strip().upper())
                                 # TODO add BLEU evaluation if needed
-    phrase_file.flush()
     phrase_file.close()
 
 
