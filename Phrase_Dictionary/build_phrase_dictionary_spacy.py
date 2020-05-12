@@ -80,10 +80,10 @@ def main():
 
         nlp_id = nlp_model_id(unit.getid())
         nlp_target = nlp_model_target(unit.gettarget())
-        res_id = ke.textrank(nlp_id, normalize='lemma', include_pos=('NOUN', 'PROPN', 'ADJ', 'VERB'), window_size=10,
+        res_id = ke.textrank(nlp_id, normalize='lemma', include_pos=('NOUN', 'PROPN', 'ADJ', 'VERB'), window_size=5,
                                      edge_weighting='binary', position_bias=False, topn=5)
         res_target = ke.textrank(nlp_target, normalize='lemma', include_pos=('NOUN', 'PROPN', 'ADJ', 'VERB'),
-                                         window_size=5, edge_weighting='binary', position_bias=False, topn=10)
+                                         window_size=5, edge_weighting='binary', position_bias=False, topn=5)
 
         for r_id in res_id:
             if (len(r_id[0].split()) > 1) and (len(res_target) > 0):  # We don't want single words, we want phrases
