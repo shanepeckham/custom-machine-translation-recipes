@@ -11,7 +11,8 @@ from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
-from common import call_translation
+from ..common.common import call_translation, set_log_level, load_tmx_file
+import logging
 
 load_dotenv()
 
@@ -25,6 +26,7 @@ class Config:
     REGION = os.environ.get("REGION")  # The region our model is deployed in
     ALIGNER_PATH = os.environ.get("ALIGNER_PATH")  # The location of the alignment script
     # https://www.microsoft.com/en-us/download/details.aspx?id=52608&from=https%3A%2F%2Fresearch.microsoft.com%2Fen-us%2Fdownloads%2Faafd5dcf-4dcc-49b2-8a22-f7055113e656%2F
+    DEBUG = bool(os.environ.get("DEBUG"))  # Activate debugging
 
 
 def pdf_parser(data):
@@ -61,6 +63,7 @@ def main():
                         help='es or fr')
 
     args = parser.parse_args()
+    set_log_level(Config.DEBUG)
 
     translated_path = args.translated_path
     translated_doc = args.translated_doc
@@ -175,6 +178,62 @@ def main():
     df_translated = pd.DataFrame(data)
 
     df_translated.to_csv(os.path.join(output_path, 'MT_' + translated_doc[:-3] + 'csv'), sep=',')
+
+    for cat_id, category_id in enumerate(categories):
+
+        for i, source_text in enumerate(lst_source_text):
+
+            # Create a simple aligned html report
+            html_file = open(os.path.join(output_path, 'MT_' + translated_doc[:-3] + '_' + category_id + '.html'), 'a')
+
+            if i == 0:
+                html = """<!DOCTYPE html><html lang = "en" ><head><meta charset = "UTF-8">"""
+                html_file.write(html)
+
+                html = """<title>""" + 'MT_' + translated_doc[:-3] + '_' + category_id + """</title>"""
+                html_file.write(html)
+                html = """</head><div>"""
+                html_file.write(html)
+
+                html = """<table id =""" + '"' + args.source_doc + '"' + """style = "border:1px solid; width:50%; 
+                float:left" frame=void rules=rows><tr>"""
+                html_file.write(html)
+                html = """<td><u>""" + args.source_doc + """</u></td></tr>"""
+                html_file.write(html)
+
+            # Now we add a table row
+            html = """<tr><td>ENU: """ + source_text + """</td></tr>"""
+            html_file.write(html)
+            html = """<tr><td>REF: """ + lst_target_txt[i] + """</td></tr>"""
+            html_file.write(html)
+            #for cat_ind in range(len(categories)):
+            #    html = """<tr><td></td></tr>"""
+            #    html = """<tr><td></td></tr>"""
+            #    html_file.write(html)
+
+            if i == len(lst_source_text) - 1:
+                html = """</table>"""
+                html_file.write(html)
+
+        html = """<table id =""" + '"' + args.translated_doc + '"' + """style = "border:1px solid; width:50%; float:left"
+        frame=void rules=rows><tr>"""
+        html_file.write(html)
+        html = """<td><u>""" + args.translated_doc + """</u></td></tr>"""
+        html_file.write(html)
+
+        #for cat_id, category_id in enumerate(categories):
+        # Now we add a table row
+        for j, sentence in enumerate(cat_sentences[cat_id]):
+            html = """<tr><td>MT: """ + sentence + """</td></tr>"""
+            html_file.write(html)
+            html = """<tr><td>REF: """ + lst_target_txt[j] + """</td></tr>"""
+            html_file.write(html)
+
+        html = """</table>"""
+        html_file.write(html)
+        html = """</div><body></body></html>"""
+        html_file.write(html)
+        html_file.close()
 
 
 if __name__ == '__main__':
