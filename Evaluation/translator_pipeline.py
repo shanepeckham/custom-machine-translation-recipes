@@ -218,6 +218,7 @@ def main():
                         translated_text = translation['text']
                         if len(translated_text) == 0:
                             bleu_score = 0
+                            bleu_scores = 0
                         else:
                             bleu_scores = sacrebleu.corpus_bleu(hypothesis, translated_text)
                             bleu_score = bleu_scores.score
