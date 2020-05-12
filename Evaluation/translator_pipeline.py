@@ -30,6 +30,11 @@ class Config:
 
 
 def pdf_parser(data):
+    """
+
+    :param data: The file stream
+    :return: The converted text
+    """
     fp = open(data, 'rb')
     rsrc_mgr = PDFResourceManager()
     ret_str = io.StringIO()
@@ -46,7 +51,83 @@ def pdf_parser(data):
     return data
 
 
+def build_HTML_aligned_report(categories, cat_sentences, lst_source_text, lst_target_txt, output_path, source_doc,
+                              translated_doc):
+    """
+    This function generates a simple HTML page that is sentence aligned, per model, containing the HYP, REF and MT text
+    :param categories: The models we are evaluating
+    :param cat_sentences: The translated sentences per model
+    :param lst_source_text: The HYP text
+    :param lst_target_txt: The REF text
+    :param output_path: The path we want to write to
+    :param source_doc: The source document HYP we are translating
+    :param translated_doc: The human translated REF doc
+    :return:
+    """
+
+    for cat_id, category_id in enumerate(categories):
+
+        for i, source_text in enumerate(lst_source_text):
+
+            # Create a simple aligned html report
+            html_file = open(os.path.join(output_path, 'MT_' + translated_doc[:-3] + '_' + category_id + '.html'), 'a')
+
+            if i == 0:
+                html = """<!DOCTYPE html><html lang = "en" ><head><meta charset = "UTF-8">"""
+                html_file.write(html)
+
+                html = """<title>""" + 'MT_' + translated_doc[:-3] + '_' + category_id + """</title>"""
+                html_file.write(html)
+                html = """</head><div>"""
+                html_file.write(html)
+
+                html = """<table id =""" + '"' + source_doc + '"' + """style = "border:1px solid; width:50%; 
+                float:left" frame=void rules=rows><tr>"""
+                html_file.write(html)
+                html = """<td><u>""" + source_doc + """</u></td></tr>"""
+                html_file.write(html)
+
+            # Now we add a table row
+            html = """<tr><td>ENU: """ + source_text + """</td></tr>"""
+            html_file.write(html)
+            html = """<tr><td>REF: """ + lst_target_txt[i] + """</td></tr>"""
+            html_file.write(html)
+
+            if i == len(lst_source_text) - 1:
+                html = """</table>"""
+                html_file.write(html)
+
+        html = """<table id =""" + '"' + translated_doc + '"' + """style = "border:1px solid; width:50%; float:left"
+        frame=void rules=rows><tr>"""
+        html_file.write(html)
+        html = """<td><u>""" + translated_doc + """</u></td></tr>"""
+        html_file.write(html)
+
+        # Now we add a table row
+        for j, sentence in enumerate(cat_sentences[cat_id]):
+            html = """<tr><td>MT: """ + sentence + """</td></tr>"""
+            html_file.write(html)
+            html = """<tr><td>REF: """ + lst_target_txt[j] + """</td></tr>"""
+            html_file.write(html)
+
+        html = """</table>"""
+        html_file.write(html)
+        html = """</div><body></body></html>"""
+        html_file.write(html)
+        html_file.close()
+        logging.debug(f"Generated HTML report "
+                      f"{str(os.path.join(output_path, 'MT_' + translated_doc[:-3] + '_' + category_id + '.html'))}")
+
+
 def main():
+    """
+    This script takes a source document, reference translated document and:
+    * Converts the PDF to text
+    * Sentence aligns the source and reference documents
+    * Translates the document sentence by sentence against all models
+    * Generates various reports
+    :return: Full text translation, CSV file with BLEU scores and text, HTML report with sentences only
+    """
     # We pass these dynamic arguments in for parallel jobs
     parser = argparse.ArgumentParser(description='Process docs for machine translation')
     parser.add_argument('--translated-path', type=str,
@@ -91,7 +172,7 @@ def main():
         pipe = subprocess.Popen(["perl", "align-sents-all.pl", source_aligner, target_aligner],
                                 stdin=subprocess.PIPE, stderr=subprocess.PIPE, cwd=Config.ALIGNER_PATH).communicate()
     except Exception as align_error:
-        print(f"Error with alignment script {align_error}")
+        logging.error(f"Error with alignment script {align_error}")
 
     source_aligned_doc = source_text_doc + '.aligned'
     translated_aligned_doc = translated_text_doc + '.aligned'
@@ -122,7 +203,7 @@ def main():
               'w') as mt_file:
 
         for i, etxt in enumerate(lst_en_aligned):
-            print(f"Processing {i} of {len(lst_en_aligned)}")
+            logging.debug(f"Processing {i} of {len(lst_en_aligned)}")
             hypothesis = lst_fr_aligned[i]
             lst_source_text.append(etxt)
             lst_target_txt.append(hypothesis)
@@ -132,7 +213,7 @@ def main():
                                                        subscription_key, Config.REGION)
 
                 for translations in translation_results:
-                    print(f"CategoryId {category_id} translation {translations}")
+                    logging.info(f"CategoryId {category_id} translation {translations}")
                     for translation in translations['translations']:
                         translated_text = translation['text']
                         if len(translated_text) == 0:
@@ -140,25 +221,25 @@ def main():
                         else:
                             bleu_scores = sacrebleu.corpus_bleu(hypothesis, translated_text)
                             bleu_score = bleu_scores.score
-                        print(f"*** Category {category_id}")
+                        logging.info(f"*** Category {category_id}")
                         mt_file.write(f"\n*** Category {category_id}")
-                        print(f"ENG: {etxt}")
+                        logging.info(f"ENG: {etxt}")
                         mt_file.write(f"\n ENG: {etxt}")
-                        print(f"REF: {hypothesis}")
+                        logging.info(f"REF: {hypothesis}")
                         mt_file.write(f"\n REF: {hypothesis}")
-                        print(f"MT : {translated_text}")
+                        logging.info(f"MT : {translated_text}")
                         mt_file.write(f"\n MT : {translated_text}")
-                        print(f"{bleu_scores}")
-                        print(f"\n********************************")
+                        logging.info(f"{bleu_scores}")
+                        logging.info(f"\n********************************")
                         cat_dicts[cat_ind][i] = []
                         cat_dicts[cat_ind][i].append(translated_text)
                         cat_dicts[cat_ind][i].append(bleu_score)
-                        print(f"_____________________")
-                        print('\n')
+                        logging.info(f"_____________________")
+                        logging.info('\n')
 
     cat_scores = [[] for category_id in categories]
     cat_sentences = [[] for category_id in categories]
-    # This creates a text file for the translated model for each model
+    # This creates a text file for the translated document for each model
     for cat_id, category_id in enumerate(categories):
         with open(os.path.join(output_path, 'MT_' + translated_doc[:-3] + '_' + category_id + '.txt'),
                   'w') as mt_file:
@@ -169,8 +250,6 @@ def main():
 
     data = {'Source': lst_source_text, 'Target': lst_target_txt}
 
-    print(len(lst_source_text), len(lst_target_txt), len(cat_scores), len(cat_sentences))
-
     for cat_id, category_id in enumerate(categories):
         data[categories[cat_id] + '_score'] = cat_scores[cat_id]
         data[categories[cat_id] + '_sentence'] = cat_sentences[cat_id]
@@ -178,62 +257,10 @@ def main():
     df_translated = pd.DataFrame(data)
 
     df_translated.to_csv(os.path.join(output_path, 'MT_' + translated_doc[:-3] + 'csv'), sep=',')
+    logging.debug(f"Generated CSV file {str(os.path.join(output_path, 'MT_' + translated_doc[:-3] + 'csv'))}")
 
-    for cat_id, category_id in enumerate(categories):
-
-        for i, source_text in enumerate(lst_source_text):
-
-            # Create a simple aligned html report
-            html_file = open(os.path.join(output_path, 'MT_' + translated_doc[:-3] + '_' + category_id + '.html'), 'a')
-
-            if i == 0:
-                html = """<!DOCTYPE html><html lang = "en" ><head><meta charset = "UTF-8">"""
-                html_file.write(html)
-
-                html = """<title>""" + 'MT_' + translated_doc[:-3] + '_' + category_id + """</title>"""
-                html_file.write(html)
-                html = """</head><div>"""
-                html_file.write(html)
-
-                html = """<table id =""" + '"' + args.source_doc + '"' + """style = "border:1px solid; width:50%; 
-                float:left" frame=void rules=rows><tr>"""
-                html_file.write(html)
-                html = """<td><u>""" + args.source_doc + """</u></td></tr>"""
-                html_file.write(html)
-
-            # Now we add a table row
-            html = """<tr><td>ENU: """ + source_text + """</td></tr>"""
-            html_file.write(html)
-            html = """<tr><td>REF: """ + lst_target_txt[i] + """</td></tr>"""
-            html_file.write(html)
-            #for cat_ind in range(len(categories)):
-            #    html = """<tr><td></td></tr>"""
-            #    html = """<tr><td></td></tr>"""
-            #    html_file.write(html)
-
-            if i == len(lst_source_text) - 1:
-                html = """</table>"""
-                html_file.write(html)
-
-        html = """<table id =""" + '"' + args.translated_doc + '"' + """style = "border:1px solid; width:50%; float:left"
-        frame=void rules=rows><tr>"""
-        html_file.write(html)
-        html = """<td><u>""" + args.translated_doc + """</u></td></tr>"""
-        html_file.write(html)
-
-        #for cat_id, category_id in enumerate(categories):
-        # Now we add a table row
-        for j, sentence in enumerate(cat_sentences[cat_id]):
-            html = """<tr><td>MT: """ + sentence + """</td></tr>"""
-            html_file.write(html)
-            html = """<tr><td>REF: """ + lst_target_txt[j] + """</td></tr>"""
-            html_file.write(html)
-
-        html = """</table>"""
-        html_file.write(html)
-        html = """</div><body></body></html>"""
-        html_file.write(html)
-        html_file.close()
+    build_HTML_aligned_report(categories, cat_sentences, lst_source_text, lst_target_txt, output_path, args.source_doc,
+                              args.translated_doc)
 
 
 if __name__ == '__main__':
