@@ -102,8 +102,6 @@ def main():
                                     phrases[r_id[0]] = r_tar[0].strip()
                                     # As the phrase dictionary is case sensitive, let's include a few variations
                                     phrase_file.write('\n' + r_id[0] + ', ' + r_tar[0].strip())
-                                    phrase_file.write('\n' + r_id[0].lower() + ', ' + r_tar[0].strip().lower())
-                                    phrase_file.write('\n' + r_id[0].upper() + ', ' + r_tar[0].strip().upper())
                                 # TODO add BLEU evaluation if needed
     phrase_file.close()
 
