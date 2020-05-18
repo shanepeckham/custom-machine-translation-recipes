@@ -31,7 +31,7 @@ to see if the required language models are available and how to install them.
 
 ### Python libraries
 
-Ensure that the [required libraries](../requirements.txt) have been installed in your virtual environment.
+Ensure that the [required libraries](../../requirements.txt) have been installed in your virtual environment.
 
 ## Input arguments
 
