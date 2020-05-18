@@ -36,7 +36,6 @@ jupyter-core==4.6.3
 lxml==4.5.0
 MarkupSafe==1.1.1
 mistune==0.8.4
-mkl-fft==1.0.15
 mkl-random==1.1.0
 mkl-service==2.3.0
 murmurhash==1.0.2
@@ -87,7 +86,8 @@ scipy==1.4.1
 Send2Trash==1.5.0
 sh==1.12.14
 six==1.14.0
-spacy==2.2.4
+spacy>=2.2.0,<3.0.0
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz#egg=en_core_web_sm
 srsly==1.0.2
 terminado==0.8.3
 testpath==0.4.4

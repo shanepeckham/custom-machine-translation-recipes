@@ -14,7 +14,8 @@ class TestRecipesCommon(TestCase):
         :param model: The model we want to load
         :return: The loaded spaCy model
         """
-        nlp_model = spacy.load('en_core_web_md')
+        import en_core_web_sm
+        nlp_model = en_core_web_sm.load()
         assert nlp_model is not None
 
     def test_load_tmx_file(source_language=None, target_language=None):
