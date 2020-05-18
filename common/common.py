@@ -2,6 +2,7 @@ from requests import post
 import logging
 from translate.storage.tmx import tmxfile
 import spacy
+import subprocess
 
 
 def set_log_level(debug):
@@ -79,3 +80,24 @@ def load_phrase_dictionary(file, mode):
     """
     phrase_dict = open(file, mode)
     return phrase_dict
+
+
+def call_sentence_alignment(source_aligner, target_aligner, aligner_path):
+    """
+    This invokes the Microsoft Bilingual Sentence Aligner perl script
+    see https://www.microsoft.com/en-us/download/details.aspx?id=52608&from=https%3A%2F%2Fresearch.microsoft.com%2Fen-us%2Fdownloads%2Faafd5dcf-4dcc-49b2-8a22-f7055113e656%2F
+    :param source_aligner: The source language document
+    :param target_aligner: The target language document
+    :param aligner_path: The path where the Microsoft Bilingual Sentence Aligner perl script
+    :return: pipe - The subprocess result
+    """
+
+    pipe = None
+    try:
+        # Now we call the alignment Perl script
+        pipe = subprocess.Popen(["perl", "align-sents-all.pl", source_aligner, target_aligner],
+                                stdin=subprocess.PIPE, stderr=subprocess.PIPE, cwd=aligner_path).communicate()
+    except Exception as align_error:
+        logging.error(f"Error with alignment script {align_error}")
+
+    return pipe

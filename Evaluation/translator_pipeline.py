@@ -2,7 +2,6 @@ import argparse
 import io
 import os
 import os.path
-import subprocess
 
 import pandas as pd
 import sacrebleu
@@ -11,7 +10,7 @@ from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
-from ..common.common import call_translation, set_log_level, load_tmx_file
+from ..common.common import call_translation, set_log_level, load_tmx_file, call_sentence_alignment
 import logging
 
 load_dotenv()
@@ -21,7 +20,7 @@ class Config:
     """
     Read from .env file - These are params that are static across parallel jobs
     """
-    SUBSCRIPTION_KEY = os.environ.get("SUBSCRIPTION_KEY")  # Our Subscription key
+    SUBSCRIPTION_KEY = os.environ.get("SUBSCRIPTION_KEY")  # The Custom Translation Subscription key
     CATEGORIES = os.environ.get("CATEGORIES")  # The categories/model ids we are evaluating
     REGION = os.environ.get("REGION")  # The region our model is deployed in
     ALIGNER_PATH = os.environ.get("ALIGNER_PATH")  # The location of the alignment script
@@ -167,12 +166,9 @@ def main():
     target_aligner = os.path.join(translated_path, translated_text_doc)
     source_aligner = os.path.join(source_path, source_text_doc)
 
-    try:
-        # Now we call the alignment Perl script
-        pipe = subprocess.Popen(["perl", "align-sents-all.pl", source_aligner, target_aligner],
-                                stdin=subprocess.PIPE, stderr=subprocess.PIPE, cwd=Config.ALIGNER_PATH).communicate()
-    except Exception as align_error:
-        logging.error(f"Error with alignment script {align_error}")
+    # Now we call the Microsoft Bilingual Sentence Alignment script
+    alignment_results = call_sentence_alignment(source_aligner, target_aligner, Config.ALIGNER_PATH)
+    logging.info(f"Sentence Alignment {alignment_results}")
 
     source_aligned_doc = source_text_doc + '.aligned'
     translated_aligned_doc = translated_text_doc + '.aligned'
@@ -189,15 +185,11 @@ def main():
     subscription_key = Config.SUBSCRIPTION_KEY
 
     categories = Config.CATEGORIES
-    print(categories)
     categories = categories.strip().split(',')
 
     cat_dicts = [{} for category_id in categories]
-    category_score = {}
-    category_sentence = {}
     lst_target_txt = []
     lst_source_text = []
-    lst_mt_score = []
 
     with open(os.path.join(output_path, 'MT_' + translated_doc[:-3] + '_all_models' + '.txt'),
               'w') as mt_file:
@@ -240,6 +232,7 @@ def main():
 
     cat_scores = [[] for category_id in categories]
     cat_sentences = [[] for category_id in categories]
+
     # This creates a text file for the translated document for each model
     for cat_id, category_id in enumerate(categories):
         with open(os.path.join(output_path, 'MT_' + translated_doc[:-3] + '_' + category_id + '.txt'),
