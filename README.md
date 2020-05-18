@@ -9,16 +9,16 @@ This repo contains the following:
 
 | Stage | Scenario | Description |
 | -------- | ----------- | ------|
-| Analysis | [Creating datasets](Analysis/Translation Memory to datasets.ipynb) | Cleaning Translation memory files and generate train/test/tune datasets
+| Analysis | [Creating datasets](Analysis/Translation-Memory-to-datasets.ipynb) | Cleaning Translation memory files and generate train/test/tune datasets
 | Analysis | [Generate Phrase Dictionary](Analysis/Phrase_Dictionary/README.md) | Illustrates unsupervised approaches to building a Phrase Dictionary
 | Evaluation | [Translator pipeline](Evaluation/translator_pipeline.py) | A full source to target language multi-model evaluation pipeline
-| Evaluation | [Evaluate and compare model results](Evaluation/Evaluate Results.ipynb) | Aggregate and compare all model results
+| Evaluation | [Evaluate and compare model results](Evaluation/Evaluate-Results.ipynb) | Aggregate and compare all model results
 
 ## Getting Started
 
 The order in which to run these scripts is as follows:
 
-1) Start by creating your [datasets](Analysis/Translation Memory to datasets.ipynb)
+1) Start by creating your [datasets](Analysis/Translation-Memory-to-datasets.ipynb)
 2) Train your models on these datasets using different base language models per language
 3) [Evaluate all models](Evaluation/translator_pipeline.py) against your test document set
 4) [Select the best model](Evaluation/Evaluate Results.ipynb) - include human evaluation
