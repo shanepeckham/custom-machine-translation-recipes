@@ -11,10 +11,10 @@ This repo contains the following:
 
 | Stage | Scenario | Description |
 | -------- | ----------- | ------|
-| Analysis | [Creating datasets](Analysis/Translation-Memory-to-datasets.ipynb) | Cleaning Translation memory files and generate train/test/tune datasets
+| Analysis | [Creating datasets](Analysis/Translation_Memory_to_datasets.ipynb) | Cleaning Translation memory files and generate train/test/tune datasets
 | Analysis | [Generate Phrase Dictionary](Analysis/Phrase_Dictionary/README.md) | Illustrates unsupervised approaches to building a Phrase Dictionary
 | Evaluation | [Translator pipeline](Evaluation/translator_pipeline.py) | A full source to target language multi-model evaluation pipeline
-| Evaluation | [Evaluate and compare model results](Evaluation/Evaluate-Results.ipynb) | Aggregate and compare all model results
+| Evaluation | [Evaluate and compare model results](Evaluation/Evaluate_Results.ipynb) | Aggregate and compare all model results
 
 ## Getting Started
 
