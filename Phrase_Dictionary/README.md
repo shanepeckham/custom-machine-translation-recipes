@@ -12,7 +12,7 @@ This approach uses both [spaCY](https://spacy.io/) and [textaCy](https://textacy
 identify key phrases to build the Phrase Dictionary. See the [Textrank algorithm](https://textacy.readthedocs.io/en/stable/api_reference/information_extraction.html#textrank)
 for more details.
 
-The script (build_phrase_dictionary_spacy.py)[build_phrase_dictionary_spacy.py] will perform the following:
+The script [build_phrase_dictionary_spacy.py](build_phrase_dictionary_spacy.py) will perform the following:
 
 1) Load a tmx translation memory file
 2) Load the spaCY models 
