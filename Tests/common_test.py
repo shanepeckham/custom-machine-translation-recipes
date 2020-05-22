@@ -26,14 +26,14 @@ class TestRecipesCommon(TestCase):
         :param target_language: The target language we are translating to
         :return: The tmx file XML file as a translation.storage.tmx object
         """
-        file = 'Data/en_es.tmx'
+        file = 'Tests/Data/en_es.tmx'
         with open(file, 'rb') as tmx:
             tmx_file = tmxfile(tmx, 'en-GB', 'es-ES')  # TODO This does not affect what is loaded
 
         unit_zero = "CONVENTION ON A COMMON TRANSIT PROCEDURE"
         assert str(tmx_file.getunits()[0].getid()) == unit_zero
 
-    def test_call_sentence_alignment(self, source_aligner='Data/english.txt', target_aligner="Data/spanish.txt",
+    def test_call_sentence_alignment(self, source_aligner='Tests/Data/english.txt', target_aligner="Tests/Data/spanish.txt",
                                      aligner_path="../Aligner"):
         """
         This invokes the Microsoft Bilingual Sentence Aligner perl script
