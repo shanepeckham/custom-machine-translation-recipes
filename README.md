@@ -1,6 +1,6 @@
 # Custom machine translation recipes
 
-![Python package](https://github.com/shanepeckham/custom-machine-translation-recipes/workflows/Python%20package/badge.svg)
+![Python package](https://github.com/shanepeckham/custom-machine-translation-recipes/workflows/Python%20package/badge.svg?branch=master)
 
 This repository contains code samples to help train and optimise a custom translation model on Azure,
 see [Custom Translator Documentation](https://docs.microsoft.com/en-us/azure/cognitive-services/translator/custom-translator/overview)
