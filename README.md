@@ -20,7 +20,7 @@ This repo contains the following:
 
 The order in which to run these scripts is as follows:
 
-1) Start by creating your [datasets](Analysis/Translation-Memory-to-datasets.ipynb)
+1) Start by creating your [datasets](Analysis/Translation_Memory_to_datasets.ipynb)
 2) Train your models on these datasets using different base language models per language
 3) [Evaluate all models](Evaluation/translator_pipeline.py) against your test document set
 4) [Select the best model](Evaluation/Evaluate Results.ipynb) - include human evaluation
