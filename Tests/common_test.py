@@ -34,7 +34,7 @@ class TestRecipesCommon(TestCase):
         assert str(tmx_file.getunits()[0].getid()) == unit_zero
 
     def test_call_sentence_alignment(self, source_aligner='Tests/Data/english.txt', target_aligner="Tests/Data/spanish.txt",
-                                     aligner_path="../Aligner"):
+                                     aligner_path="Aligner"):
         """
         This invokes the Microsoft Bilingual Sentence Aligner perl script
         see https://www.microsoft.com/en-us/download/details.aspx?id=52608&from=https%3A%2F%2Fresearch.microsoft.com%2Fen-us%2Fdownloads%2Faafd5dcf-4dcc-49b2-8a22-f7055113e656%2F
