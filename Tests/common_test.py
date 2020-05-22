@@ -18,7 +18,7 @@ class TestRecipesCommon(TestCase):
         nlp_model = en_core_web_sm.load()
         assert nlp_model is not None
 
-    def test_load_tmx_file(source_language=None, target_language=None):
+    def test_load_tmx_file(self, source_language=None, target_language=None):
         """
         Loads the tmx file
         :param file: The tmx memory file to open
