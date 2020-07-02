@@ -19,6 +19,8 @@ The script [build_phrase_dictionary_spacy.py](build_phrase_dictionary_spacy.py) 
 3) Perform the TextRank algorithm against both source and target languages to determine phrases
 4) Check whether the Custom Translation matches the identified phrases, and it it matches, commit to the dictionary
 
+<img src="../images/Phrase.png" align="center" alt="" width="700"/>
+
 ## Requirements
 
 A pre-trained Custom Translation model that performs well against your automated/human evaluation must exist as we will

@@ -12,6 +12,8 @@ This script will perform the following:
 3) Translate each sentence against multiple models and evaluate BLEU scores against each model translation
 4) Generates output reports for analysis
 
+<img src="../images/Evaluation.png" align="center" alt="" width="700"/>
+
 ## Requirements
 
 ### The sentence alignment script
