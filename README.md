@@ -23,7 +23,7 @@ The order in which to run these scripts is as follows:
 1) Start by creating your [datasets](Analysis/Translation_Memory_to_datasets.ipynb)
 2) Train your models on these datasets using different base language models per language
 3) [Evaluate all models](Evaluation/translator_pipeline.py) against your test document set
-4) [Select the best model](Evaluation/Evaluate Results.ipynb) - include human evaluation
+4) [Select the best model](Evaluation/Evaluate_Results.ipynb) - include human evaluation
 5) [Generate a Phrase dictionary](Analysis/Phrase_Dictionary/README.md) using your best model
 6) Consider creating a [stylistic accurate tuning dataset](https://docs.microsoft.com/en-us/azure/cognitive-services/translator/custom-translator/training-and-model#tuning-document-type-for-custom-translator)
 7) Retrain the model using the Phrase Dictionary and optimised tuning set
