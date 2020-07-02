@@ -13,7 +13,7 @@ This repo contains the following:
 | -------- | ----------- | ------|
 | Analysis | [Creating datasets](Analysis/Translation_Memory_to_datasets.ipynb) | Cleaning Translation memory files and generate train/test/tune datasets
 | Analysis | [Generate Phrase Dictionary](Analysis/Phrase_Dictionary/README.md) | Illustrates unsupervised approaches to building a Phrase Dictionary
-| Evaluation | [Translator pipeline](Evaluation/translator_pipeline.py) | A full source to target language multi-model evaluation pipeline
+| Evaluation | [Translator pipeline](Evaluation/README.md) | A full source to target language multi-model evaluation pipeline
 | Evaluation | [Evaluate and compare model results](Evaluation/Evaluate_Results.ipynb) | Aggregate and compare all model results
 
 ## Getting Started
@@ -22,7 +22,7 @@ The order in which to run these scripts is as follows:
 
 1) Start by creating your [datasets](Analysis/Translation_Memory_to_datasets.ipynb)
 2) Train your models on these datasets using different base language models per language
-3) [Evaluate all models](Evaluation/translator_pipeline.py) against your test document set
+3) [Evaluate all models](Evaluation/README.md) against your test document set
 4) [Select the best model](Evaluation/Evaluate_Results.ipynb) - include human evaluation
 5) [Generate a Phrase dictionary](Analysis/Phrase_Dictionary/README.md) using your best model
 6) Consider creating a [stylistic accurate tuning dataset](https://docs.microsoft.com/en-us/azure/cognitive-services/translator/custom-translator/training-and-model#tuning-document-type-for-custom-translator)
