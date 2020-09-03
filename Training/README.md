@@ -34,7 +34,7 @@ env:
 
 ### Configuring the Custom Translator CLI tool
 
-The workflow uses the [Custom Translator CLI](https://www.nuget.org/packages/custom-translator-cli/), a CLI for the Azure Custom Translator portal services. There are a number of setup steps that you must follow carefully. Read and follow the [Azure Custom Translator CLI Installation instructions](https://github.com/AndyCW/Azure-Custom-Translator-CLI/blob/master/README.md#installation) carefully. 
+The workflow uses the [Custom Translator CLI](https://www.nuget.org/packages/custom-translator-cli/), a CLI for the Azure Custom Translator portal services. There are a number of setup steps that you must follow carefully. Read and follow the [Azure Custom Translator CLI Installation instructions](https://github.com/AndyCW/Azure-Custom-Translator-CLI/blob/master/README.md#installation) carefully.
 
 In particular, note the [requirement to run the tool interactively](https://github.com/AndyCW/Azure-Custom-Translator-CLI/blob/master/README.md#using-the-cli-tool-in-a-devops-workflow) at least once ebfore you try to use it in an automation workflow.
 
@@ -62,7 +62,7 @@ When the workflow has completed, you can see the workflow has completed the foll
 
 * If it did not already exist, created a new workspace with the name you set in the workflow environment variables.
 * Created a new project in that workspace for each of the langauge pairs you defined in the workflow environment variables. The name is formatted as the project name you defined in the workflow environment variables with a shortened SHA hash for the run appended to it, for example: *EACsample-693ac24*.
-* Uploaded all the documents found in the **.\Data\train** and **.\Data\test** folders to the workspace. The document names also have the same shortened SHA appended to identify them as belonging to this run. 
+* Uploaded all the documents found in the **.\Data\train** and **.\Data\test** folders to the workspace. The document names also have the same shortened SHA appended to identify them as belonging to this run.
   
   > **IMPORTANT:** Documents should be named with the language pair included as a dot-delimited element in the filename. For example: **EAC_FORMS.***en_fr***.tmx**
 
