@@ -1,0 +1,135 @@
+# This workflow will build and train new custom translator models
+
+name: Build Models
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'data/*'
+
+env:
+    # If your repository is Private, set this to true
+    IS_PRIVATE_REPOSITORY: true
+
+    # Name of the workspace that will be created
+    WORKSPACE_NAME: AutomationWS
+
+    # Root of the project names - language and short SHA will be appended
+    PROJECT_NAME: EACsample
+
+    # Custom Translator category for your documents
+    # - see https://docs.microsoft.com/en-us/azure/cognitive-services/translator/custom-translator/workspace-and-project#project-categories
+    PROJECT_CATEGORY: Education
+
+    # Project description
+    PROJECT_DESCRIPTION: Actions of EAC's Life-long Learning Programme (LLP) and the Youth in Action Programme
+
+    # Languages - set this to the different language pairs that you are building for
+    PROJECT_LANGUAGES: en:de|en:es|en:fr
+
+    #==============================================================================================================
+    #
+    # IMPORTANT - this workflow requires that the Custom Translator CLI has been configured, and that the following
+    # secrets have been configured:
+    #
+    # TRANSLATOR_ACCOUNT_KEY: your Azure Custom Translator subscription key
+    # TRANSLATOR_VAULT_URI: your-keyvault-DNS-hostname
+    # AZURE_CLIENT_ID: Application (client) ID
+    # AZURE_TENANT_ID: Directory (tenant) ID
+    # AZURE_CLIENT_SECRET: Application client secret
+    #
+    # See Training/README.md for details.
+    #==============================================================================================================
+
+jobs:
+    build:
+      name: Custom Translator Build
+      runs-on: ubuntu-latest
+
+      steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: Fetch all history for all tags and branches - for GitVersion
+        if: env.IS_PRIVATE_REPOSITORY == 'false'
+        run: git fetch --prune --unshallow
+      - name: Fetch all history for all tags and branches (private repo) - for GitVersion
+        if: env.IS_PRIVATE_REPOSITORY == 'true'
+        run: |
+            git config remote.origin.url https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+            git fetch --prune --unshallow
+
+      - name: Install GitVersion v0.9.4
+        uses: gittools/actions/gitversion/setup@0333200
+        with:
+            versionSpec: '5.2.x'
+      - name: Use GitVersion v0.9.4
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@0333200
+
+      - name: Set env variables for custom-translator-cli
+        run: |
+            echo "::set-env name=AZURE_CLIENT_ID::${{ secrets.AZURE_CLIENT_ID }}"      
+            echo "::set-env name=AZURE_TENANT_ID::${{ secrets.AZURE_TENANT_ID }}"      
+            echo "::set-env name=AZURE_CLIENT_SECRET::${{ secrets.AZURE_CLIENT_SECRET }}"      
+            echo "::set-env name=TRANSLATOR_VAULT_URI::${{ secrets.TRANSLATOR_VAULT_URI }}"      
+
+      - name: Install custom-translator-cli
+        run: dotnet tool install custom-translator-cli -g --version 1.1.4
+
+      - name: set config
+        run: translator config set -n default -k ${{ secrets.TRANSLATOR_ACCOUNT_KEY }} -r global -s
+          
+      - name: Create/Get the target workspace
+        shell: pwsh
+        run: |
+            $id = translator workspace create -n "$env:WORKSPACE_NAME" --json | Out-String | ConvertFrom-Json | Select -ExpandProperty "id"
+            echo "::set-env name=WorkspaceId::$id"
+
+      - name: Create project(s)
+        id: Create-Project
+        shell: pwsh
+        run: |
+            $language_pairs = $env:PROJECT_LANGUAGES.Split('|')
+            ForEach ($lp in $language_pairs) {
+              $id = translator project create -n $env:PROJECT_NAME-$env:GitVersion_ShortSha -ws $env:WorkspaceId -lp $lp -c "$env:PROJECT_CATEGORY" -d "$env:PROJECT_DESCRIPTION" -label "$env:GitVersion_ShortSha" --json | Out-String | ConvertFrom-Json | Select -ExpandProperty "id"
+              echo "::set-env name=ProjectId-$lp::$id"
+            }
+
+      - name: Upload training documents
+        shell: pwsh
+        run: |
+            $language_pairs = $env:PROJECT_LANGUAGES.Split('|')
+            ForEach ($lp in $language_pairs) {
+              .\CICDscripts\UploadDocuments.ps1 "$lp" ".\Data\train" "training"
+            }
+
+      - name: Upload testing documents
+        shell: pwsh
+        run:  |
+            $language_pairs = $env:PROJECT_LANGUAGES.Split('|')
+            ForEach ($lp in $language_pairs) {
+              .\CICDscripts\UploadDocuments.ps1 "$lp" ".\Data\test" "testing"
+            }
+
+      - name: List documents
+        id: docListStep
+        shell: pwsh
+        run: |
+            $language_pairs = $env:PROJECT_LANGUAGES.Split('|')
+            ForEach ($lp in $language_pairs) {
+              .\CICDscripts\GetDocIds.ps1 "$lp" "$env:GitVersion_ShortSha" "$env:WorkspaceId"
+            }
+
+      - name: Create and train model
+        shell: pwsh
+        run: |
+            $language_pairs = $env:PROJECT_LANGUAGES.Split('|')
+            ForEach ($lp in $language_pairs) {
+              $projectId = [System.Environment]::GetEnvironmentVariable("ProjectId-" + $lp)
+              $docList = [System.Environment]::GetEnvironmentVariable("DocIds-" + $lp)
+              Write-Output "Creating model for ProjectId $projectId"
+              translator model create -p $projectId -n $env:GitVersion_SemVer -d $docList -t -j --wait
+            }
